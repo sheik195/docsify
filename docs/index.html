@@ -135,7 +135,7 @@ window.$docsify = {
 
       hook.afterEach(async function (content, next) {
 
-        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
+        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits?path=README.md&sha=main`;
 
         try {
           const res = await fetch(apiURL);
