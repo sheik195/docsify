@@ -18,10 +18,6 @@ window.$docsify = {
   plugins: [
     function (hook, vm) {
 
-      hook.beforeEach(function(content) {
-        return content;
-      });
-
       hook.afterEach(async function (content, next) {
         const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
 
@@ -29,67 +25,50 @@ window.$docsify = {
           const res = await fetch(apiURL);
           const commits = await res.json();
 
-          const perPage = 10;                 // commits per page
-          const url = new URL(window.location.href);
-          let page = parseInt(url.searchParams.get("page") || "1");
-
-          const totalPages = Math.ceil(commits.length / perPage);
-
-          // Ensure page stays in valid range
-          if (page < 1) page = 1;
-          if (page > totalPages) page = totalPages;
-
-          const start = (page - 1) * perPage;
-          const end = start + perPage;
-          const pageCommits = commits.slice(start, end);
+          // 🔥 SHOW ONLY 10 LATEST COMMITS
+          const recent = commits.slice(0, 10);
 
           let history = `
-<h2>📝 Commit History (Page ${page} of ${totalPages})</h2>
+<h2>📝 Latest 10 Commits</h2>
 
 <style>
-.commit-card {
-  padding: 12px 15px;
-  margin: 12px 0;
-  border-left: 4px solid #42b983;
-  background: #f9f9f9;
-  border-radius: 6px;
+.commit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
 }
+
+.commit-card {
+  padding: 15px;
+  background: #f9f9f9;
+  border-left: 4px solid #42b983;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
 .commit-author {
   font-weight: bold;
-  color: #2c3e50;
   font-size: 16px;
 }
-.commit-message {
-  margin-top: 6px;
-  font-size: 15px;
-  color: #444;
-}
+
 .commit-date {
   font-size: 13px;
-  color: #888;
+  color: #777;
+  margin-top: 4px;
 }
-.pagination {
-  margin-top: 20px;
-  text-align: center;
-}
-.page-btn {
-  padding: 8px 15px;
-  margin: 5px;
-  border: 1px solid #42b983;
-  background: #fff;
-  color: #42b983;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.page-btn.disabled {
-  opacity: 0.5;
-  pointer-events: none;
+
+.commit-message {
+  margin-top: 10px;
+  font-size: 15px;
 }
 </style>
+
+<div class="commit-grid">
 `;
 
-          // Add commit cards
-          pageCommits.forEach(c => {
+          // 🔥 Add commit cards INSIDE GRID
+          recent.forEach(c => {
             history += `
 <div class="commit-card">
   <div class="commit-author">👤 ${c.commit.author.name}</div>
@@ -99,30 +78,18 @@ window.$docsify = {
 `;
           });
 
-          // Pagination buttons
-          history += `
-<div class="pagination">
-  <a class="page-btn ${page === 1 ? "disabled" : ""}" 
-     href="?page=${page - 1}">⬅ Previous</a>
-
-  <a class="page-btn ${page === totalPages ? "disabled" : ""}" 
-     href="?page=${page + 1}">Next ➡</a>
-</div>
-`;
+          history += `</div>`;
 
           next(history + content);
 
         } catch (e) {
-          next("<h2>📝 Commit History</h2><p>Error loading commit history.</p>" + content);
+          next("<h2>📝 Commit History</h2><p>Error loading commits.</p>" + content);
         }
       });
     }
   ]
 }
 </script>
-
-
-
 
 </body>
 </html>
