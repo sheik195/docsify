@@ -4,69 +4,147 @@
   <meta charset="UTF-8">
   <title>My Docs</title>
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/vue.css" />
-  <style>
-    .commit-card {
-      padding: 12px 15px;
-      margin-bottom: 12px;
-      border-left: 4px solid #42b983;
-      background: #f9f9f9;
-      border-radius: 6px;
-    }
-    .commit-author {
-      font-weight: bold;
-      color: #2c3e50;
-    }
-    .commit-message {
-      margin-top: 6px;
-      font-size: 15px;
-      color: #555;
-    }
-    .commit-date {
-      font-size: 13px;
-      color: #888;
-    }
-    .pagination {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .page-btn {
-      padding: 8px 15px;
-      margin: 5px;
-      border: 1px solid #42b983;
-      background: #fff;
-      color: #42b983;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    .page-btn.disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-  </style>
+
+<style>
+/* ---------- THEME VARIABLES ---------- */
+:root {
+  --card-bg: #f9f9f9;
+  --text: #2c3e50;
+  --subtext: #777;
+  --border: #42b983;
+}
+body.dark {
+  --card-bg: #1e1e1e;
+  --text: #eaeaea;
+  --subtext: #bbb;
+  --border: #4ade80;
+  background: #121212 !important;
+  color: #eaeaea !important;
+}
+
+/* ---------- DARK MODE TOGGLE ---------- */
+#themeToggle {
+  position: fixed;
+  top: 10px;
+  right: 20px;
+  padding: 8px 12px;
+  background: var(--border);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 9999;
+}
+
+/* ---------- SEARCH ---------- */
+.search-box {
+  margin: 20px 0;
+}
+.search-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 16px;
+}
+
+/* ---------- COMMIT GRID ---------- */
+.commit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+.commit-card {
+  padding: 15px;
+  background: var(--card-bg);
+  border-left: 4px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.commit-author {
+  font-weight: bold;
+  font-size: 16px;
+  color: var(--text);
+}
+.commit-date {
+  font-size: 13px;
+  color: var(--subtext);
+  margin-top: 4px;
+}
+.commit-message {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--text);
+}
+/* ---------- COLLAPSE DETAILS ---------- */
+.commit-details {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 6px;
+  display: none;
+  font-size: 14px;
+}
+body.dark .commit-details {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ---------- PAGINATION ---------- */
+.pagination {
+  margin: 25px 0;
+  text-align: center;
+}
+.page-btn {
+  padding: 10px 18px;
+  margin: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--border);
+  text-decoration: none;
+}
+.page-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+</style>
+
 </head>
 <body>
 
-<div id="app"></div>
+<button id="themeToggle">🌙 Dark Mode</button>
 
+<div id="app"></div>
 <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 
 <script>
+// ---------------------- DARK MODE ----------------------
+document.getElementById("themeToggle").onclick = () => {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+};
+if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark");
+
+// ---------------------- DOCSIFY CONFIG ----------------------
 window.$docsify = {
   name: 'My Docs',
-  repo: 'sheik195/docsify', // your public GitHub repo
+  repo: 'sheik195/docsify',
 
   plugins: [
-    function(hook, vm) {
-      hook.afterEach(async function(content, next) {
-        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits?path=Docs/README.md`; // file path in repo
+    function (hook, vm) {
+
+      hook.afterEach(async function (content, next) {
+
+        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
+
         try {
           const res = await fetch(apiURL);
           const commits = await res.json();
 
           const perPage = 10;
-          const urlParams = new URLSearchParams(window.location.search);
-          let page = parseInt(urlParams.get("page")) || 1;
+          const url = new URL(window.location.href);
+          let page = parseInt(url.searchParams.get("page") || "1");
+
           const totalPages = Math.ceil(commits.length / perPage);
 
           if (page < 1) page = 1;
@@ -74,26 +152,58 @@ window.$docsify = {
 
           const start = (page - 1) * perPage;
           const end = start + perPage;
+
           const pageCommits = commits.slice(start, end);
 
-          let history = `<h2>📝 Commit History (Page ${page} of ${totalPages})</h2>`;
+          let history = `
+<h2>📝 Commit History (Page ${page} of ${totalPages})</h2>
 
-          pageCommits.forEach(c => {
+<div class="search-box">
+  <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search commits...">
+</div>
+
+<div class="commit-grid">
+`;
+
+          for (const c of pageCommits) {
+            // Fetch details (files changed)
+            let details = await fetch(c.url).then(r => r.json());
+            let files = details.files.map(f => `• ${f.filename}`).join("<br>");
+
             history += `
-              <div class="commit-card">
-                <div class="commit-author">👤 ${c.commit.author.name}</div>
-                <div class="commit-date">📅 ${new Date(c.commit.author.date).toLocaleString()}</div>
-                <div class="commit-message">💬 ${c.commit.message}</div>
-              </div>
-            `;
-          });
+<div class="commit-card" onclick="toggleDetails('${c.sha}')">
+  <div class="commit-author">👤 ${c.commit.author.name}</div>
+  <div class="commit-date">📅 ${new Date(c.commit.author.date).toLocaleString()}</div>
+  <div class="commit-message">💬 ${c.commit.message}</div>
+
+  <div id="${c.sha}" class="commit-details">
+    <b>Files changed:</b><br>${files}
+  </div>
+</div>
+`;
+          }
 
           history += `
-            <div class="pagination">
-              <a class="page-btn ${page === 1 ? "disabled" : ""}" href="?page=${page - 1}">⬅ Previous</a>
-              <a class="page-btn ${page === totalPages ? "disabled" : ""}" href="?page=${page + 1}">Next ➡</a>
-            </div>
-          `;
+</div>
+
+<div class="pagination">
+  <a class="page-btn ${page === 1 ? "disabled" : ""}" href="?page=${page - 1}">⬅ Previous</a>
+  <a class="page-btn ${page === totalPages ? "disabled" : ""}" href="?page=${page + 1}">Next ➡</a>
+</div>
+
+<script>
+function toggleDetails(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+document.getElementById("searchInput").addEventListener("input", function () {
+  const term = this.value.toLowerCase();
+  document.querySelectorAll(".commit-card").forEach(card => {
+    card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none";
+  });
+});
+</script>
+`;
 
           next(history + content);
 
@@ -103,7 +213,7 @@ window.$docsify = {
       });
     }
   ]
-};
+}
 </script>
 
 </body>
