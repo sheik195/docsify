@@ -8,21 +8,43 @@
 <body>
   <div id="app"></div>
 
+  <!-- Docsify Core -->
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify-git/dist/docsify-git.min.js"></script>
 
   <script>
     window.$docsify = {
       name: 'My Docs',
-      repo: 'sheik195/docsify',  // your GitHub repo
-      git: {
-        repo: 'sheik195/docsify',
-        branch: 'main',  // branch where files exist
-        timeFormat: 'YYYY-MM-DD HH:mm',
-        contributors: true,
-        allCommits: true // <-- this tells the plugin to show all commits
-      }
+      repo: 'sheik195/docsify',
+
+      plugins: [
+        function (hook, vm) {
+          hook.afterEach(async function (content) {
+
+            const path = vm.route.file || 'README.md';
+
+            const apiURL = `https://api.github.com/repos/sheik195/docsify/commits?path=${path}`;
+
+            const res = await fetch(apiURL);
+            const commits = await res.json();
+
+            let history = "## 📝 Commit History\n\n";
+
+            commits.forEach(c => {
+              history += `
+**Author:** ${c.commit.author.name}  
+**Date:** ${c.commit.author.date}  
+**Message:** ${c.commit.message}  
+
+---  
+`;
+            });
+
+            return history + "\n" + content;
+          });
+        }
+      ]
     }
   </script>
+
 </body>
 </html>
