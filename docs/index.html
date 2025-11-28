@@ -8,7 +8,6 @@
 <body>
   <div id="app"></div>
 
-  <!-- Docsify Core -->
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 
   <script>
@@ -21,14 +20,13 @@
 
           hook.afterEach(function (content, next) {
 
-            const path = vm.route.file || 'README.md';
-            const apiURL = `https://api.github.com/repos/sheik195/docsify/commits?path=${path}`;
+            const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
 
             fetch(apiURL)
               .then(res => res.json())
               .then(commits => {
 
-                let history = "## 📝 Commit History\n\n";
+                let history = "## 📝 Commit History (All Repo Commits)\n\n";
 
                 commits.forEach(c => {
                   history += `
@@ -42,7 +40,7 @@
                 next(history + "\n\n" + content);
               })
               .catch(err => {
-                next("## 📝 Commit History\n\nUnable to load commit history.\n\n" + content);
+                next("## 📝 Commit History\n\nUnable to load commits.\n\n" + content);
               });
           });
         }
