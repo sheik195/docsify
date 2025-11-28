@@ -1,4 +1,5 @@
 <!--docsify-git-->
+{% include README_git_info.md %}
 
 # Welcome
 
