@@ -18,30 +18,30 @@
       plugins: [
         function (hook, vm) {
 
-          hook.afterEach(function (content, next) {
+          hook.afterEach(async function (content, next) {
 
             const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
 
-            fetch(apiURL)
-              .then(res => res.json())
-              .then(commits => {
+            try {
+              const res = await fetch(apiURL);
+              const commits = await res.json();
 
-                let history = "## 📝 Commit History (All Repo Commits)\n\n";
+              let history = "## 📝 Commit History\n\n";
 
-                commits.forEach(c => {
-                  history += `
+              commits.forEach(c => {
+                history += `
 **Author:** ${c.commit.author.name}  
-**Date:** ${c.commit.author.date}  
+**Date:** ${new Date(c.commit.author.date).toLocaleString()}  
 **Message:** ${c.commit.message}  
 
----`;
-                });
-
-                next(history + "\n\n" + content);
-              })
-              .catch(err => {
-                next("## 📝 Commit History\n\nUnable to load commits.\n\n" + content);
+---\n`;
               });
+
+              next(history + "\n" + content);
+
+            } catch (e) {
+              next("## 📝 Commit History\nFailed to load history.\n\n" + content);
+            }
           });
         }
       ]
