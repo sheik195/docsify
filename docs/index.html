@@ -10,13 +10,18 @@
 
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 
-  <script>
+<script>
 window.$docsify = {
   name: 'My Docs',
   repo: 'sheik195/docsify',
 
   plugins: [
     function (hook, vm) {
+
+      // Before Docsify parses Markdown → return pure HTML
+      hook.beforeEach(function(content) {
+        return content;
+      });
 
       hook.afterEach(async function (content, next) {
 
@@ -26,12 +31,14 @@ window.$docsify = {
           const res = await fetch(apiURL);
           const commits = await res.json();
 
+          // IMPORTANT: No markdown here, only pure HTML
           let history = `
-## 📝 Commit History  
+<h2>📝 Commit History</h2>
+
 <style>
 .commit-card {
   padding: 12px 15px;
-  margin-bottom: 12px;
+  margin: 12px 0;
   border-left: 4px solid #42b983;
   background: #f9f9f9;
   border-radius: 6px;
@@ -39,11 +46,12 @@ window.$docsify = {
 .commit-author {
   font-weight: bold;
   color: #2c3e50;
+  font-size: 16px;
 }
 .commit-message {
   margin-top: 6px;
   font-size: 15px;
-  color: #555;
+  color: #444;
 }
 .commit-date {
   font-size: 13px;
@@ -62,16 +70,18 @@ window.$docsify = {
 `;
           });
 
-          next(history + "\n\n" + content);
+          // Return HTML directly (not markdown)
+          next(history + content);
 
         } catch (e) {
-          next("## 📝 Commit History\nError loading commit history.\n\n" + content);
+          next("<h2>📝 Commit History</h2><p>Error loading commit history.</p>" + content);
         }
       });
     }
   ]
 }
 </script>
+
 
 
 </body>
