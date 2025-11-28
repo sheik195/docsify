@@ -18,22 +18,33 @@ window.$docsify = {
   plugins: [
     function (hook, vm) {
 
-      // Before Docsify parses Markdown → return pure HTML
       hook.beforeEach(function(content) {
         return content;
       });
 
       hook.afterEach(async function (content, next) {
-
         const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
 
         try {
           const res = await fetch(apiURL);
           const commits = await res.json();
 
-          // IMPORTANT: No markdown here, only pure HTML
+          const perPage = 10;                 // commits per page
+          const url = new URL(window.location.href);
+          let page = parseInt(url.searchParams.get("page") || "1");
+
+          const totalPages = Math.ceil(commits.length / perPage);
+
+          // Ensure page stays in valid range
+          if (page < 1) page = 1;
+          if (page > totalPages) page = totalPages;
+
+          const start = (page - 1) * perPage;
+          const end = start + perPage;
+          const pageCommits = commits.slice(start, end);
+
           let history = `
-<h2>📝 Commit History</h2>
+<h2>📝 Commit History (Page ${page} of ${totalPages})</h2>
 
 <style>
 .commit-card {
@@ -57,10 +68,28 @@ window.$docsify = {
   font-size: 13px;
   color: #888;
 }
+.pagination {
+  margin-top: 20px;
+  text-align: center;
+}
+.page-btn {
+  padding: 8px 15px;
+  margin: 5px;
+  border: 1px solid #42b983;
+  background: #fff;
+  color: #42b983;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.page-btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
 </style>
 `;
 
-          commits.forEach(c => {
+          // Add commit cards
+          pageCommits.forEach(c => {
             history += `
 <div class="commit-card">
   <div class="commit-author">👤 ${c.commit.author.name}</div>
@@ -70,7 +99,17 @@ window.$docsify = {
 `;
           });
 
-          // Return HTML directly (not markdown)
+          // Pagination buttons
+          history += `
+<div class="pagination">
+  <a class="page-btn ${page === 1 ? "disabled" : ""}" 
+     href="?page=${page - 1}">⬅ Previous</a>
+
+  <a class="page-btn ${page === totalPages ? "disabled" : ""}" 
+     href="?page=${page + 1}">Next ➡</a>
+</div>
+`;
+
           next(history + content);
 
         } catch (e) {
@@ -81,6 +120,7 @@ window.$docsify = {
   ]
 }
 </script>
+
 
 
 
