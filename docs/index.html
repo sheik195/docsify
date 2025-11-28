@@ -11,42 +11,68 @@
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 
   <script>
-    window.$docsify = {
-      name: 'My Docs',
-      repo: 'sheik195/docsify',
+window.$docsify = {
+  name: 'My Docs',
+  repo: 'sheik195/docsify',
 
-      plugins: [
-        function (hook, vm) {
+  plugins: [
+    function (hook, vm) {
 
-          hook.afterEach(async function (content, next) {
+      hook.afterEach(async function (content, next) {
 
-            const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
+        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
 
-            try {
-              const res = await fetch(apiURL);
-              const commits = await res.json();
+        try {
+          const res = await fetch(apiURL);
+          const commits = await res.json();
 
-              let history = "## 📝 Commit History\n\n";
+          let history = `
+## 📝 Commit History  
+<style>
+.commit-card {
+  padding: 12px 15px;
+  margin-bottom: 12px;
+  border-left: 4px solid #42b983;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+.commit-author {
+  font-weight: bold;
+  color: #2c3e50;
+}
+.commit-message {
+  margin-top: 6px;
+  font-size: 15px;
+  color: #555;
+}
+.commit-date {
+  font-size: 13px;
+  color: #888;
+}
+</style>
+`;
 
-              commits.forEach(c => {
-                history += `
-**Author:** ${c.commit.author.name}  
-**Date:** ${new Date(c.commit.author.date).toLocaleString()}  
-**Message:** ${c.commit.message}  
-
----\n`;
-              });
-
-              next(history + "\n" + content);
-
-            } catch (e) {
-              next("## 📝 Commit History\nFailed to load history.\n\n" + content);
-            }
+          commits.forEach(c => {
+            history += `
+<div class="commit-card">
+  <div class="commit-author">👤 ${c.commit.author.name}</div>
+  <div class="commit-date">📅 ${new Date(c.commit.author.date).toLocaleString()}</div>
+  <div class="commit-message">💬 ${c.commit.message}</div>
+</div>
+`;
           });
+
+          next(history + "\n\n" + content);
+
+        } catch (e) {
+          next("## 📝 Commit History\nError loading commit history.\n\n" + content);
         }
-      ]
+      });
     }
-  </script>
+  ]
+}
+</script>
+
 
 </body>
 </html>
