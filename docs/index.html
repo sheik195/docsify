@@ -5,56 +5,84 @@
   <title>My Docs</title>
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/vue.css" />
   <style>
-    .commit-card {
-      padding: 12px 15px;
-      margin-bottom: 12px;
-      border-left: 4px solid #42b983;
-      background: #f9f9f9;
-      border-radius: 6px;
+    body { font-family: Arial, sans-serif; }
+    
+    .search-box { margin: 20px 0; text-align: center; }
+    .search-input { width: 60%; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #42b983; }
+
+    .commit-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      margin-top: 20px;
     }
+
+    .commit-card {
+      padding: 15px;
+      background: #f9f9f9;
+      border-left: 4px solid #42b983;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .commit-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
     .commit-author { font-weight: bold; color: #2c3e50; }
-    .commit-message { margin-top: 6px; font-size: 15px; color: #555; }
-    .commit-date { font-size: 13px; color: #888; }
-    .pagination { margin-top: 20px; text-align: center; }
+    .commit-message { margin-top: 6px; font-size: 14px; color: #555; }
+    .commit-date { font-size: 12px; color: #888; margin-top: 4px; }
+    .commit-link { font-size: 12px; color: #42b983; text-decoration: none; display: block; margin-top: 6px; }
+
+    .pagination {
+      margin: 25px 0;
+      text-align: center;
+    }
+
     .page-btn {
       padding: 8px 15px;
-      margin: 5px;
+      margin: 4px;
+      border-radius: 6px;
       border: 1px solid #42b983;
-      background: #fff;
+      background: transparent;
       color: #42b983;
-      border-radius: 5px;
-      cursor: pointer;
       text-decoration: none;
+      cursor: pointer;
     }
-    .page-btn.disabled { opacity: 0.5; pointer-events: none; }
-    .search-box { margin: 20px 0; }
-    .search-input { width: 100%; padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #42b983; }
+
+    .page-btn.disabled { opacity: 0.4; pointer-events: none; }
   </style>
 </head>
 <body>
 
+<div class="search-box">
+  <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search commits...">
+</div>
+
 <div id="app"></div>
 
 <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-
 <script>
 window.$docsify = {
   name: 'My Docs',
-  repo: 'sheik195/docsify', // your GitHub repo
+  repo: 'sheik195/docsify',
+
   plugins: [
     function(hook, vm) {
       hook.afterEach(async function(content, next) {
         try {
-          // Fetch all commits
           const apiURL = 'https://api.github.com/repos/sheik195/docsify/commits';
           const res = await fetch(apiURL);
           const commits = await res.json();
 
-          // Pagination
-          const perPage = 10;
+          const perPage = 10; // 5x2 grid
           const urlParams = new URLSearchParams(window.location.search);
           let page = parseInt(urlParams.get('page')) || 1;
           const totalPages = Math.ceil(commits.length / perPage);
+
           if (page < 1) page = 1;
           if (page > totalPages) page = totalPages;
 
@@ -62,9 +90,9 @@ window.$docsify = {
           const end = start + perPage;
           const pageCommits = commits.slice(start, end);
 
-          // Build HTML
+          // Build grid
           let history = `<h2>📝 Commit History (Page ${page} of ${totalPages})</h2>`;
-          history += `<div class="search-box"><input type="text" id="searchInput" class="search-input" placeholder="🔍 Search commits..."></div>`;
+          history += `<div class="commit-grid">`;
 
           pageCommits.forEach(c => {
             history += `
@@ -72,12 +100,14 @@ window.$docsify = {
                 <div class="commit-author">👤 ${c.commit.author.name}</div>
                 <div class="commit-date">📅 ${new Date(c.commit.author.date).toLocaleString()}</div>
                 <div class="commit-message">💬 ${c.commit.message}</div>
-                <a href="${c.html_url}" target="_blank">View on GitHub</a>
+                <a href="${c.html_url}" target="_blank" class="commit-link">View on GitHub</a>
               </div>
             `;
           });
 
-          // Pagination buttons
+          history += `</div>`;
+
+          // Pagination
           history += `
             <div class="pagination">
               <a class="page-btn ${page === 1 ? "disabled" : ""}" href="?page=${page - 1}">⬅ Previous</a>
@@ -87,7 +117,7 @@ window.$docsify = {
 
           next(history + content);
 
-          // Search filter
+          // Search
           document.getElementById('searchInput').addEventListener('input', function() {
             const term = this.value.toLowerCase();
             document.querySelectorAll('.commit-card').forEach(card => {
