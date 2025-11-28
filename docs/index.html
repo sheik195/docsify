@@ -11,46 +11,44 @@
   <!-- Docsify Core -->
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 
- <script>
-window.$docsify = {
-  name: 'My Docs',
-  repo: 'sheik195/docsify',
+  <script>
+    window.$docsify = {
+      name: 'My Docs',
+      repo: 'sheik195/docsify',
 
-  plugins: [
-    function (hook, vm) {
+      plugins: [
+        function (hook, vm) {
 
-      hook.afterEach(function (content, next) {
+          hook.afterEach(function (content, next) {
 
-        const path = vm.route.file || 'README.md';
-        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits?path=${path}`;
+            const path = vm.route.file || 'README.md';
+            const apiURL = `https://api.github.com/repos/sheik195/docsify/commits?path=${path}`;
 
-        fetch(apiURL)
-          .then(res => res.json())
-          .then(commits => {
+            fetch(apiURL)
+              .then(res => res.json())
+              .then(commits => {
 
-            let history = "## 📝 Commit History\n\n";
+                let history = "## 📝 Commit History\n\n";
 
-            commits.forEach(c => {
-              history += `
+                commits.forEach(c => {
+                  history += `
 **Author:** ${c.commit.author.name}  
 **Date:** ${c.commit.author.date}  
 **Message:** ${c.commit.message}  
 
----
-`;
-            });
+---`;
+                });
 
-            // return processed content
-            next(history + "\n" + content);
-          })
-          .catch(err => {
-            next("## 📝 Commit History\n\nUnable to load commit history.\n\n" + content);
+                next(history + "\n\n" + content);
+              })
+              .catch(err => {
+                next("## 📝 Commit History\n\nUnable to load commit history.\n\n" + content);
+              });
           });
-      });
+        }
+      ]
     }
-  ]
-}
-</script>
+  </script>
 
 </body>
 </html>
