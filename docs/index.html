@@ -3,29 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>My Docs</title>
-  <!-- Docsify theme -->
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/vue.css" />
 </head>
 <body>
   <div id="app"></div>
 
-  <!-- Docsify core -->
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
-
-  <!-- Docsify Git plugin -->
   <script src="//cdn.jsdelivr.net/npm/docsify-git/dist/docsify-git.min.js"></script>
 
   <script>
     window.$docsify = {
       name: 'My Docs',
-      repo: 'sheik195/docsify', // <-- Replace with your GitHub repo
-      loadSidebar: true,
-      loadNavbar: true,
+      repo: 'sheik195/docsify',  // your GitHub repo
       git: {
-        repo: 'sheik195/docsify', // <-- Your GitHub username/repo
-        branch: 'main',           // <-- Branch name
-        timeFormat: 'YYYY-MM-DD HH:mm', // commit date format
-        contributors: true        // show all authors
+        repo: 'sheik195/docsify',
+        branch: 'main',  // branch where files exist
+        timeFormat: 'YYYY-MM-DD HH:mm',
+        contributors: true,
+        allCommits: true // <-- this tells the plugin to show all commits
       }
     }
   </script>
