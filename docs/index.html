@@ -1,182 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>My Docs</title>
+  <meta charset="UTF-8" />
+  <title>Docsify – Commits</title>
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/vue.css" />
 
-<style>
-:root {
-  --card-bg: #f9f9f9;
-  --text: #2c3e50;
-  --subtext: #777;
-  --border: #42b983;
-}
-body.dark {
-  --card-bg: #1f1f1f;
-  --text: #eaeaea;
-  --subtext: #aaa;
-  --border: #33d17a;
-  background: #121212 !important;
-}
+  <style>
+    .commit-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .commit-card {
+      padding: 16px;
+      background: var(--bg);
+      border-radius: 8px;
+      border-left: 4px solid #42b983;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .commit-author {
+      font-weight: bold;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .commit-message {
+      color: var(--text);
+      margin-top: 8px;
+    }
+    .commit-date {
+      font-size: 13px;
+      color: gray;
+    }
+    .pagination {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .page-btn {
+      padding: 8px 15px;
+      border: 1px solid #42b983;
+      border-radius: 5px;
+      margin: 5px;
+      text-decoration: none;
+      color: #42b983;
+    }
+    .page-btn.disabled {
+      pointer-events: none;
+      opacity: 0.4;
+    }
 
-#themeToggle {
-  position: fixed;
-  top: 12px;
-  right: 20px;
-  padding: 8px 12px;
-  background: var(--border);
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 9999;
-}
-
-.commit-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
-  gap: 15px;
-}
-.commit-card {
-  padding: 15px;
-  background: var(--card-bg);
-  border-left: 4px solid var(--border);
-  border-radius: 8px;
-  cursor: pointer;
-}
-.commit-author { font-weight: bold; color: var(--text); }
-.commit-date { color: var(--subtext); font-size: 13px; margin-top: 5px; }
-.commit-message { margin-top: 7px; color: var(--text); }
-
-.commit-details {
-  margin-top: 10px;
-  padding: 8px;
-  background: rgba(0,0,0,0.08);
-  display: none;
-  border-radius: 6px;
-}
-body.dark .commit-details { background: rgba(255,255,255,0.08); }
-
-.pagination { text-align:center; margin:20px 0; }
-.page-btn {
-  padding: 8px 15px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--border);
-  background: transparent;
-  text-decoration: none;
-}
-.page-btn.disabled { opacity: .4; pointer-events:none; }
-
-.search-box { margin: 20px 0; }
-.search-input {
-  width:100%;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-</style>
+    /* Dark mode support */
+    :root {
+      --bg: #ffffff;
+      --text: #222;
+    }
+    [data-theme="dark"] {
+      --bg: #1e1e1e;
+      --text: #ddd;
+    }
+  </style>
 </head>
 
 <body>
+  <div id="app"></div>
 
-<button id="themeToggle">🌙 Dark</button>
+  <script>
+    window.$docsify = {
+      name: "My Docs",
+      repo: "sheik195/docsify"
+    };
+  </script>
 
-<div id="app"></div>
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
 
-<script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+  <!-- Dark mode -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js"></script>
 
-<script>
-// ---------- DARK MODE ----------
-document.getElementById("themeToggle").onclick = () => {
-  document.body.classList.toggle("dark");
-  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
-};
-if (localStorage.getItem("theme")==="dark") document.body.classList.add("dark");
+  <!-- Commit Loader (WORKING FIXED VERSION) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const target = document.querySelector(".content");
 
-
-// ---------- GLOBAL FUNCTIONS ----------
-window.toggleDetails = function(id){
-  const el = document.getElementById(id);
-  el.style.display = el.style.display==="block" ? "none" : "block";
-};
-
-window.filterCommits = function(){
-  const term = document.getElementById("searchInput").value.toLowerCase();
-  document.querySelectorAll(".commit-card").forEach(card=>{
-    card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none";
-  });
-};
-
-
-// ---------- DOCSIFY ----------
-window.$docsify = {
-  name: 'My Docs',
-  repo: 'sheik195/docsify',
-
-  plugins: [
-    function (hook, vm) {
-      hook.afterEach(async function(content, next){
-
-        const apiURL = `https://api.github.com/repos/sheik195/docsify/commits`;
-        const res = await fetch(apiURL);
+      const loadCommits = async () => {
+        const api = `https://api.github.com/repos/sheik195/docsify/commits`;
+        const res = await fetch(api);
         const commits = await res.json();
 
-        const perPage = 10;
-        const url = new URL(window.location.href);
+        let url = new URL(window.location.href);
         let page = parseInt(url.searchParams.get("page") || "1");
 
-        const totalPages = Math.ceil(commits.length/perPage);
-        if (page<1) page=1;
-        if (page>totalPages) page=totalPages;
+        const perPage = 10;
+        const totalPages = Math.ceil(commits.length / perPage);
 
-        const start = (page-1)*perPage;
-        const end = start + perPage;
-        const pageCommits = commits.slice(start,end);
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
 
-        let history = `
-<h2>📝 Commit History (Page ${page}/${totalPages})</h2>
+        const start = (page - 1) * perPage;
+        const list = commits.slice(start, start + perPage);
 
-<div class="search-box">
-  <input id="searchInput" class="search-input" placeholder="🔍 Search..." oninput="filterCommits()">
-</div>
+        let html = `<h2>📝 Commit History (Page ${page} of ${totalPages})</h2>`;
+        html += `<div class="commit-grid">`;
 
-<div class="commit-grid">
-`;
+        list.forEach(c => {
+          html += `
+          <div class="commit-card">
+            <div class="commit-author">👤 ${c.commit.author.name}</div>
+            <div class="commit-date">📅 ${new Date(c.commit.author.date).toLocaleString()}</div>
+            <div class="commit-message">💬 ${c.commit.message}</div>
+          </div>
+          `;
+        });
 
-        // Fetch files inside each commit
-        for (const c of pageCommits) {
-          let detail = await fetch(c.url).then(r=>r.json());
-          let files = detail.files.map(f=>`• ${f.filename}`).join("<br>");
+        html += `</div>`;
 
-          history += `
-<div class="commit-card" onclick="toggleDetails('${c.sha}')">
-  <div class="commit-author">👤 ${c.commit.author.name}</div>
-  <div class="commit-date">📅 ${new Date(c.commit.author.date).toLocaleString()}</div>
-  <div class="commit-message">💬 ${c.commit.message}</div>
+        html += `
+        <div class="pagination">
+          <a class="page-btn ${page===1?'disabled':''}" href="?page=${page-1}">⬅ Previous</a>
+          <a class="page-btn ${page===totalPages?'disabled':''}" href="?page=${page+1}">Next ➡</a>
+        </div>
+        `;
 
-  <div id="${c.sha}" class="commit-details">
-    <b>Files changed:</b><br>${files}
-  </div>
-</div>
-`;
-        }
+        // Insert commit history BEFORE markdown
+        const markdownBody = document.querySelector(".markdown-section");
+        if (markdownBody) markdownBody.insertAdjacentHTML("afterbegin", html);
+      };
 
-        history += `
-</div>
-
-<div class="pagination">
-  <a class="page-btn ${page===1?"disabled":""}" href="?page=${page-1}">⬅ Prev</a>
-  <a class="page-btn ${page===totalPages?"disabled":""}" href="?page=${page+1}">Next ➡</a>
-</div>
-`;
-
-        next(history + content);
-      });
-    }
-  ]
-}
-</script>
+      // Run after Docsify renders page
+      window.$docsify.plugins = [].concat(
+        function (hook) {
+          hook.doneEach(() => loadCommits());
+        },
+        window.$docsify.plugins || []
+      );
+    });
+  </script>
 
 </body>
 </html>
